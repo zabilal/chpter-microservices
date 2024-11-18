@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package user.v1;
+
+option go_package = "github.com/zabilal/microservices/user-service/pkg/pb";
+
+message User {
+  string id = 1;
+  string email = 2;
+  string username = 3;
+  string password = 4;
+  string created_at = 5;
+  string updated_at = 6;
+}
+
+message CreateUserRequest {
+  string email = 1;
+  string username = 2;
+  string password = 3;
+}
+
+message CreateUserResponse {
+  User user = 1;
+}
+
+message GetUserRequest {
+  string id = 1;
+}
+
+message GetUserResponse {
+  User user = 1;
+}
+
+service UserService {
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+}

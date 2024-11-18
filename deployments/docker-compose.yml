@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  # Infrastructure
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: users
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"  # UI
+      - "14268:14268"  # Collector HTTP
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+
+  # Microservices
+  user-service:
+    build:
+      context: ../user-service
+      dockerfile: Dockerfile
+    ports:
+      - "50051:50051"
+      - "9101:9101"  # Metrics
+    environment:
+      - CONFIG_PATH=/config
+    depends_on:
+      mysql:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
+
+  order-service:
+    build:
+      context: ../order-service
+      dockerfile: Dockerfile
+    ports:
+      - "50052:50052"
+      - "9102:9102"  # Metrics
+    environment:
+      - CONFIG_PATH=/config
+    depends_on:
+      mysql:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
+      user-service:
+        condition: service_started
+
+  api-gateway:
+    build:
+      context: ../api-gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"  # HTTP API
+      - "9100:9100"  # Metrics
+    environment:
+      - CONFIG_PATH=/config
+    depends_on:
+      - user-service
+      - order-service
+      - jaeger
+
+volumes:
+  mysql_data:

@@ -1,0 +1,29 @@
+environment: development
+jaeger_endpoint: http://jaeger:14268/api/traces
+
+user_service:
+  server_address: :50051
+  metrics_address: :9091
+  database:
+    host: mysql
+    port: 3306
+    username: user_service
+    password: user_service_pass
+    dbname: user_service_db
+
+order_service:
+  server_address: :50052
+  metrics_address: :9092
+  user_service_address: user-service:50051
+  database:
+    host: mysql
+    port: 3306
+    username: order_service
+    password: order_service_pass
+    dbname: order_service_db
+
+api_gateway:
+  server_address: :8080
+  metrics_address: :9090
+  user_service_address: user-service:50051
+  order_service_address: order-service:50052

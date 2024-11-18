@@ -1,0 +1,21 @@
+server:
+  address: ":50052"
+  
+metrics:
+  address: ":9102"
+
+environment: "development"
+
+jaeger:
+  endpoint: "http://jaeger:14268/api/traces"
+
+services:
+  user:
+    address: "user-service:50051"
+
+database:
+  host: "mysql"
+  port: 3306
+  username: "root"
+  password: "password"
+  dbname: "orders"

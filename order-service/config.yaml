@@ -1,0 +1,21 @@
+server:
+  address: ":50052"
+
+database:
+  host: "mysql"
+  port: 3306
+  username: "microservices"
+  password: "microservices"
+  dbname: "microservices"
+
+log:
+  level: "debug"
+
+jaeger:
+  endpoint: "http://jaeger:14268/api/traces"
+
+metrics:
+  address: ":9092"
+
+user_service:
+  address: "user-service:50051"

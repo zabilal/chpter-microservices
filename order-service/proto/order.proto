@@ -1,0 +1,172 @@
+// api/proto/order/v1/order.proto
+syntax = "proto3";
+
+package order.v1;
+
+import "google/api/annotations.proto";
+import "validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+import "user/v1/user.proto";
+
+option go_package = "github.com/zabilal/microservices/pkg/genproto/order/v1;orderv1";
+
+service OrderService {
+    rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse) {
+        option (google.api.http) = {
+            post: "/v1/orders"
+            body: "*"
+        };
+    }
+
+    rpc GetOrder(GetOrderRequest) returns (GetOrderResponse) {
+        option (google.api.http) = {
+            get: "/v1/orders/{order_id}"
+        };
+    }
+
+    rpc ListOrders(ListOrdersRequest) returns (ListOrdersResponse) {
+        option (google.api.http) = {
+            get: "/v1/orders"
+        };
+    }
+
+    rpc UpdateOrderStatus(UpdateOrderStatusRequest) returns (UpdateOrderStatusResponse) {
+        option (google.api.http) = {
+            patch: "/v1/orders/{order_id}/status"
+            body: "*"
+        };
+    }
+}
+
+message Order {
+    string id = 1;
+    string user_id = 2;
+    repeated OrderItem items = 3;
+    double total_amount = 4;
+    OrderStatus status = 5;
+    user.v1.User user = 6;
+    google.protobuf.Timestamp created_at = 7;
+    google.protobuf.Timestamp updated_at = 8;
+    PaymentInfo payment_info = 9;
+    ShippingInfo shipping_info = 10;
+}
+
+enum OrderStatus {
+    ORDER_STATUS_UNSPECIFIED = 0;
+    ORDER_STATUS_PENDING = 1;
+    ORDER_STATUS_PROCESSING = 2;
+    ORDER_STATUS_COMPLETED = 3;
+    ORDER_STATUS_CANCELLED = 4;
+    ORDER_STATUS_FAILED = 5;
+}
+
+message OrderItem {
+    string product_id = 1 [(validate.rules).string = {
+        min_len: 1,
+        max_len: 36
+    }];
+    int32 quantity = 2 [(validate.rules).int32 = {
+        gt: 0,
+        lte: 100
+    }];
+    double unit_price = 3 [(validate.rules).double = {
+        gt: 0
+    }];
+    string product_name = 4;
+}
+
+message PaymentInfo {
+    string payment_id = 1;
+    PaymentStatus status = 2;
+    PaymentMethod method = 3;
+    google.protobuf.Timestamp processed_at = 4;
+}
+
+enum PaymentStatus {
+    PAYMENT_STATUS_UNSPECIFIED = 0;
+    PAYMENT_STATUS_PENDING = 1;
+    PAYMENT_STATUS_COMPLETED = 2;
+    PAYMENT_STATUS_FAILED = 3;
+    PAYMENT_STATUS_REFUNDED = 4;
+}
+
+enum PaymentMethod {
+    PAYMENT_METHOD_UNSPECIFIED = 0;
+    PAYMENT_METHOD_CREDIT_CARD = 1;
+    PAYMENT_METHOD_DEBIT_CARD = 2;
+    PAYMENT_METHOD_BANK_TRANSFER = 3;
+}
+
+message ShippingInfo {
+    string address_line1 = 1;
+    string address_line2 = 2;
+    string city = 3;
+    string state = 4;
+    string country = 5;
+    string postal_code = 6;
+    ShippingStatus status = 7;
+    string tracking_number = 8;
+}
+
+enum ShippingStatus {
+    SHIPPING_STATUS_UNSPECIFIED = 0;
+    SHIPPING_STATUS_PENDING = 1;
+    SHIPPING_STATUS_SHIPPED = 2;
+    SHIPPING_STATUS_DELIVERED = 3;
+    SHIPPING_STATUS_RETURNED = 4;
+}
+
+message CreateOrderRequest {
+    string user_id = 1 [(validate.rules).string = {
+        min_len: 1,
+        max_len: 36
+    }];
+    repeated OrderItem items = 2 [(validate.rules).repeated = {
+        min_items: 1,
+        max_items: 100
+    }];
+    ShippingInfo shipping_info = 3;
+    PaymentMethod payment_method = 4;
+}
+
+message CreateOrderResponse {
+    Order order = 1;
+}
+
+message GetOrderRequest {
+    string order_id = 1 [(validate.rules).string = {
+        min_len: 1,
+        max_len: 36
+    }];
+}
+
+message GetOrderResponse {
+    Order order = 1;
+}
+
+message ListOrdersRequest {
+    string user_id = 1;
+    OrderStatus status = 2;
+    int32 page_size = 3 [(validate.rules).int32 = {
+        gt: 0,
+        lte: 100
+    }];
+    string page_token = 4;
+}
+
+message ListOrdersResponse {
+    repeated Order orders = 1;
+    string next_page_token = 2;
+}
+
+message UpdateOrderStatusRequest {
+    string order_id = 1 [(validate.rules).string = {
+        min_len: 1,
+        max_len: 36
+    }];
+    OrderStatus status = 2;
+}
+
+message UpdateOrderStatusResponse {
+    Order order = 1;
+}
