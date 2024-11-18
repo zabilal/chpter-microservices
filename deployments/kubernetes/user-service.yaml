@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+  labels:
+    app: user-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+    spec:
+      containers:
+      - name: user-service
+        image: user-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 50051
+          name: grpc
+        - containerPort: 9101
+          name: metrics
+        env:
+        - name: CONFIG_PATH
+          value: "/config"
+        volumeMounts:
+        - name: config-volume
+          mountPath: /config
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+        livenessProbe:
+          tcpSocket:
+            port: 50051
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        readinessProbe:
+          tcpSocket:
+            port: 50051
+          initialDelaySeconds: 5
+          periodSeconds: 10
+      volumes:
+      - name: config-volume
+        configMap:
+          name: user-service-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+  labels:
+    app: user-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 50051
+    targetPort: grpc
+    protocol: TCP
+    name: grpc
+  - port: 9101
+    targetPort: metrics
+    protocol: TCP
+    name: metrics
+  selector:
+    app: user-service
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: user-service-config
+data:
+  config.yaml: |
+    server:
+      address: ":50051"
+    metrics:
+      address: ":9101"
+    environment: "production"
+    jaeger:
+      endpoint: "http://jaeger:14268/api/traces"
+    database:
+      host: "mysql"
+      port: 3306
+      username: "root"
+      password: "password"
+      dbname: "users"
