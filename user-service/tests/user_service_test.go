@@ -9,7 +9,7 @@ import (
 		"github.com/stretchr/testify/require"
 		"google.golang.org/grpc"
 
-		pb "github.com/yourusername/microservices/pkg/genproto/user/v1"
+		pb "github.com/zabilal/microservices/pkg/genproto/user/v1"
 )
 
 func TestUserService(t *testing.T) {

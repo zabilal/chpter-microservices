@@ -4,8 +4,8 @@ FROM golang:1.21-alpine AS builder
 # Set working directory
 WORKDIR /app
 
-# Copy the entire microservices project
-COPY .. .
+# Copy go mod and sum files
+COPY go.mod go.sum ./
 
 # Download dependencies
 RUN go mod download

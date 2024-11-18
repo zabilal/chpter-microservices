@@ -11,8 +11,8 @@ import (
 		"github.com/jackc/pgx/v4/pgxpool"
 		"google.golang.org/protobuf/types/known/timestamppb"
 
-		pb "github.com/yourusername/microservices/pkg/genproto/order/v1"
-		"github.com/yourusername/microservices/internal/pkg/logger"
+		pb "github.com/zabilal/microservices/pkg/genproto/order/v1"
+		"github.com/zabilal/microservices/internal/pkg/logger"
 )
 
 type OrderRepository struct {

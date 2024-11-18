@@ -1,274 +1,195 @@
 # Go Microservices Architecture Project
 
-A comprehensive, production-ready microservices system built with Go, gRPC, and modern cloud-native technologies.
+A cloud-native microservices system built with Go, gRPC, and modern observability tools.
 
 ## Project Structure
 
 ```
 project-root/
-|-- user-service/
-|   |-- proto/
-|   |   |-- user.proto
-|   |-- server/
-|   |   |-- main.go
-|   |   |-- server.go
-|   |   |-- user_service.go
-|   |-- client/
-|   |   |-- client.go
-|   |-- internal/
-|   |   |-- models/
-|   |   |-- utils/
-|   |-- tests/
-|   |-- Dockerfile
-|   |-- go.mod
-|
-|-- order-service/
-|   |-- proto/
-|   |   |-- order.proto
-|   |-- server/
-|   |   |-- main.go
-|   |   |-- server.go
-|   |   |-- order_service.go
-|   |-- client/
-|   |   |-- client.go
-|   |-- internal/
-|   |   |-- models/
-|   |   |-- utils/
-|   |-- tests/
-|   |-- Dockerfile
-|   |-- go.mod
-|
-|-- api-gateway/
-|   |-- main.go
-|   |-- gateway.go
-|   |-- config/
-|   |-- Dockerfile
-|   |-- go.mod
-|
-|-- service-registry/
-|   |-- consul/
-|       |-- config.json
-|
-|-- proto/
-|   |-- shared/
-|       |-- common.proto
-|
-|-- deployments/
-|   |-- docker-compose.yml
-|
-|-- monitoring/
-|   |-- prometheus/
-|   |-- grafana/
-|
-|-- docs/
-|-- README.md
+├── user-service/
+│   ├── config/
+│   │   └── config.yaml
+│   ├── handler/
+│   │   └── user.go
+│   ├── repository/
+│   │   └── user_repository.go
+│   ├── tests/
+│   │   └── user_service_test.go
+│   ├── main.go
+│   └── Dockerfile
+│
+├── order-service/
+│   ├── config/
+│   │   └── config.yaml
+│   ├── handler/
+│   │   └── order.go
+│   ├── repository/
+│   │   └── order_repository.go
+│   ├── tests/
+│   │   └── order_service_test.go
+│   ├── main.go
+│   └── Dockerfile
+│
+├── pkg/
+│   └── genproto/
+│       ├── user/
+│       └── order/
+│
+├── monitoring/
+│   ├── logger/
+│   ├── metrics/
+│   └── tracing/
+│
+├── deployments/
+│   ├── kubernetes/
+│   │   ├── user-service.yaml
+│   │   ├── order-service.yaml
+│   │   ├── mysql.yaml
+│   │   ├── jaeger.yaml
+│   │   ├── prometheus.yaml
+│   │   └── kustomization.yaml
+│   └── docker-compose.yml
+│
+├── go.mod
+└── README.md
 ```
 
-## Service Overview
+## Features
 
 ### User Service
-- Handles user management and authentication
-- gRPC-based service with PostgreSQL storage
-- Located in `user-service/`
+- User management (CRUD operations)
+- gRPC API with MySQL storage
+- Metrics endpoint for Prometheus
+- Distributed tracing with Jaeger
+- Structured logging with Zap
 
 ### Order Service
-- Manages order processing and tracking
-- Communicates with User Service via gRPC
-- Located in `order-service/`
-
-### API Gateway
-- REST API gateway for external clients
-- Routes requests to appropriate microservices
-- Located in `api-gateway/`
+- Order management and processing
+- Integration with User Service
+- MySQL database for persistence
+- Metrics and tracing support
+- Comprehensive error handling
 
 ### Infrastructure
-- Service Discovery: Consul
-- Monitoring: Prometheus & Grafana
-- Tracing: Jaeger
-- Database: PostgreSQL
-- Cache: Redis
+- **Observability Stack:**
+  - Metrics: Prometheus
+  - Tracing: Jaeger
+  - Logging: Zap
+- **Database:** MySQL
+- **Service Discovery:** Kubernetes DNS
+- **Configuration:** YAML-based with Viper
 
 ## Prerequisites
 
 - Go 1.21 or later
 - Docker and Docker Compose
-- kubectl (for Kubernetes deployment)
-- Make
+- Kubernetes cluster (optional)
+- MySQL 8.0
 
-## Local Development
+## Getting Started
 
-### 1. Clone the Repository
+### Local Development
 
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/zabilal/microservices.git
+   cd microservices
+   ```
+
+2. Start the infrastructure services:
+   ```bash
+   docker-compose up -d mysql jaeger prometheus
+   ```
+
+3. Run the services:
+   ```bash
+   # Terminal 1 - User Service
+   cd user-service
+   go run main.go
+
+   # Terminal 2 - Order Service
+   cd order-service
+   go run main.go
+   ```
+
+### Docker Deployment
+
+Build and run all services using Docker Compose:
 ```bash
-git clone https://github.com/yourusername/go-test-microservices.git
-cd go-test-microservices
+docker-compose up --build
 ```
 
-### 2. Install Dependencies
+### Kubernetes Deployment
 
+1. Apply the Kubernetes manifests:
+   ```bash
+   kubectl apply -k deployments/kubernetes
+   ```
+
+2. Verify the deployment:
+   ```bash
+   kubectl get pods -n microservices
+   ```
+
+## Testing
+
+### Unit Tests
 ```bash
-make deps
+# Test User Service
+cd user-service
+go test ./...
+
+# Test Order Service
+cd order-service
+go test ./...
 ```
 
-### 3. Set Up Local Environment
-
+### Integration Tests
 ```bash
-# Start infrastructure services (PostgreSQL, Redis, etc.)
-make infra-up
-
-# Apply database migrations
-make migrate-up
+# Run integration tests
+cd user-service/tests
+go test -tags=integration
 ```
 
-### 4. Run Services Locally
+## Monitoring
 
-```bash
-# Start all services
-make run
-
-# Or start individual services
-make run-user-service
-make run-order-service
-make run-gateway
-```
-
-### 5. Run Tests
-
-```bash
-# Run all tests
-make test
-
-# Run specific tests
-make test-unit
-make test-integration
-make test-e2e
-```
-
-## Docker Deployment
-
-Build and run services using Docker Compose:
-
-```bash
-# Build images
-docker-compose build
-
-# Start services
-docker-compose up -d
-
-# Check service status
-docker-compose ps
-
-# View logs
-docker-compose logs -f
-```
-
-## Kubernetes Deployment
-
-### 1. Build and Push Docker Images
-
-```bash
-# Build images
-make docker-build
-
-# Push to registry
-make docker-push
-```
-
-### 2. Deploy to Kubernetes
-
-```bash
-# Apply Kubernetes manifests
-kubectl apply -f deployments/k8s/
-
-# Check deployment status
-kubectl get pods -n microservices
-
-# Get service URLs
-kubectl get svc -n microservices
-```
-
-## Cloud Deployment
-
-### AWS EKS Deployment
-
-1. Set up EKS cluster:
-```bash
-eksctl create cluster -f deployments/eks/cluster.yaml
-```
-
-2. Configure AWS credentials:
-```bash
-aws configure
-```
-
-3. Deploy services:
-```bash
-make deploy-aws
-```
-
-### Google Cloud GKE Deployment
-
-1. Set up GKE cluster:
-```bash
-gcloud container clusters create microservices-cluster
-```
-
-2. Configure Google Cloud credentials:
-```bash
-gcloud auth configure-docker
-```
-
-3. Deploy services:
-```bash
-make deploy-gcp
-```
-
-## Monitoring and Observability
-
-### Prometheus Metrics
-- Access Prometheus: http://localhost:9090
-- Available metrics:
-  * Request latency
-  * Error rates
-  * Resource usage
-
-### Jaeger Tracing
-- Access Jaeger UI: http://localhost:16686
-- Trace information:
-  * Request flow
-  * Service dependencies
-  * Performance bottlenecks
-
-### Grafana Dashboards
-- Access Grafana: http://localhost:3000
-- Available dashboards:
-  * Service Overview
-  * Request Metrics
-  * Resource Usage
+- **Prometheus:** Access metrics at `http://localhost:9090`
+- **Jaeger UI:** View traces at `http://localhost:16686`
 
 ## API Documentation
 
-### REST API (Gateway)
-- Swagger UI: http://localhost:8080/swagger/
-- API Documentation: [docs/api.md](docs/api.md)
+### User Service (gRPC)
+- CreateUser
+- GetUser
+- UpdateUser
+- DeleteUser
+- ListUsers
 
-### gRPC Services
-- Service definitions in [api/proto](api/proto)
-- Generated documentation in [docs/grpc.md](docs/grpc.md)
+### Order Service (gRPC)
+- CreateOrder
+- GetOrder
+- UpdateOrder
+- DeleteOrder
+- ListOrders
+
+## Configuration
+
+Each service has its own `config.yaml` file in its respective `config` directory. Key configuration options:
+
+- Server address and ports
+- Database connection details
+- Metrics endpoint
+- Jaeger configuration
+- Log level
 
 ## Contributing
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Contact
-
-Your Name - [@Zakariya Raji](https://twitter.com/zabilal)
-Project Link: [https://github.com/zabilal/microservices](https://github.com/zabilal/microservices)
+This project is licensed under the MIT License - see the LICENSE file for details.
